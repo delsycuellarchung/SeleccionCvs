@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración de RRHH</title>
+    <!-- Bootstrap 4 CDN -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Fuente corporativa -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        :root {
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --muted: #6c7a89;
+            --accent: #1f4e79; /* tono sobrio azul marino */
+            --accent-weak: #2b5876;
+            --border: #e6e9ee;
+            --radius: 8px;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background-color: var(--bg);
+            font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            color: #27343b;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+        }
+
+        .container {
+            margin-top: 36px;
+            margin-bottom: 36px;
+            max-width: 1100px;
+        }
+
+        .navbar {
+            background: transparent;
+            border-bottom: none;
+            padding: 0.85rem 1rem;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.2px;
+        }
+
+        h1 {
+            font-weight: 600;
+            color: #1e2b33;
+            margin-bottom: 18px;
+        }
+
+        .card {
+            border: none;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, var(--card), var(--card));
+            box-shadow: 0 6px 18px rgba(28, 40, 50, 0.06);
+        }
+
+        .card + .card {
+            margin-top: 20px;
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: none;
+            padding: 20px 24px;
+            font-size: 1.125rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 18px 24px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: none;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-weak);
+            border-color: var(--accent-weak);
+        }
+
+        table th,
+        table td {
+            text-align: left;
+            vertical-align: middle;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .table thead th {
+            background: transparent;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.775rem;
+            letter-spacing: 0.6px;
+            border-top: none;
+        }
+
+        /* Estilo para el menú lateral */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 250px;
+            background-color: var(--accent);
+            padding-top: 20px;
+            color: white;
+        }
+
+        #sidebar a {
+            color: white;
+            font-weight: 600;
+            padding: 10px 15px;
+            display: block;
+            text-decoration: none;
+        }
+
+        #sidebar a:hover {
+            background-color: var(--accent-weak);
+        }
+
+        #sidebar .nav-item {
+            margin-bottom: 10px;
+        }
+
+        /* Sección de contenido principal */
+        #content {
+            margin-left: 250px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .alert {
+            margin-top: 15px;
+            display: none;
+            border-radius: 6px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Barra de navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+
+    <!-- Menú lateral -->
+    <div id="sidebar">
+        <h4 class="text-center text-white">Menú de Administración</h4>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a href="#formPuesto" id="linkDatosPuesto">Puestos</a>
+            </li>
+        </ul>
+    </div>
+
+    <div id="content" class="container">
+
+        <h1 class="text-center mb-4">Panel de Administración de RRHH</h1>
+
+        <!-- Mensaje de éxito/error al agregar área -->
+        <div id="messageArea" class="alert alert-success" role="alert"></div>
+
+        <!-- Sección para agregar nuevo puesto disponible -->
+        <div class="card mt-4" id="formPuesto">
+            <div class="card-header">
+                <h4>Agregar Nuevo Puesto Disponible</h4>
+            </div>
+            <div class="card-body">
+                <form id="formDatosPuesto">
+                    <div class="form-group">
+                        <label for="nombre_puesto">Nombre del Puesto:</label>
+                        <input type="text" class="form-control" id="nombre_puesto" placeholder="Ejemplo: Ingeniero de Sistemas" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="area_puesto">Área del Puesto:</label>
+                        <input type="text" class="form-control" id="area_puesto" placeholder="Ejemplo: Sistemas, Tecnología" required>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="nextRequisitos">Siguiente: Requisitos</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sección de Requisitos -->
+        <div class="card mt-4" id="requisitos" style="display: none;">
+            <div class="card-header">
+                <h4>Requisitos del Puesto</h4>
+            </div>
+            <div class="card-body">
+                <form id="formRequisitos">
+                    <div class="form-group">
+                        <label for="formacion_academica">Formación Académica Requerida:</label>
+                        <input type="text" class="form-control" id="formacion_academica" placeholder="Ejemplo: Ingeniería de Sistemas, Licenciatura" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="experiencia_laboral">Experiencia Laboral Requerida:</label>
+                        <input type="text" class="form-control" id="experiencia_laboral" placeholder="Ejemplo: 3 años en soporte técnico" required>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="nextHabilidades">Siguiente: Habilidades</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sección de Habilidades y Certificaciones -->
+        <div class="card mt-4" id="habilidades" style="display: none;">
+            <div class="card-header">
+                <h4>Habilidades y Certificaciones</h4>
+            </div>
+            <div class="card-body">
+                <form id="formHabilidades">
+                    <div class="form-group">
+                        <label for="habilidades">Habilidades Requeridas:</label>
+                        <input type="text" class="form-control" id="habilidades" placeholder="Ejemplo: Python, SQL, Redes" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="certificaciones">Certificaciones Requeridas:</label>
+                        <input type="text" class="form-control" id="certificaciones" placeholder="Ejemplo: Certificación Cisco, AWS" required>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="nextCamposAdicionales">Siguiente: Campos Adicionales</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sección de Campos Adicionales -->
+        <div class="card mt-4" id="campos_adicionales" style="display: none;">
+            <div class="card-header">
+                <h4>Campos Adicionales</h4>
+            </div>
+            <div class="card-body">
+                <button type="button" class="btn btn-secondary" id="addField">Agregar Campo Adicional</button>
+                <div id="dynamicFields"></div> <!-- Aquí aparecerán los campos dinámicos -->
+                <button type="submit" class="btn btn-primary btn-block mt-4">Guardar puesto</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Mostrar siguiente sección cuando se haga clic en los botones
+            $('#nextRequisitos').click(function () {
+                $('#formPuesto').hide();
+                $('#requisitos').show();
+            });
+
+            $('#nextHabilidades').click(function () {
+                $('#requisitos').hide();
+                $('#habilidades').show();
+            });
+
+            $('#nextCamposAdicionales').click(function () {
+                $('#habilidades').hide();
+                $('#campos_adicionales').show();
+            });
+
+            // Agregar un nuevo campo dinámico
+            var dynamicFieldCount = 0;
+            $('#addField').click(function () {
+                dynamicFieldCount++;
+                var newField = `<div class="form-group" id="field${dynamicFieldCount}">
+                                    <label for="dynamic_field_${dynamicFieldCount}">Campo Adicional ${dynamicFieldCount}:</label>
+                                    <input type="text" class="form-control" id="dynamic_field_${dynamicFieldCount}" placeholder="Ejemplo: Información adicional para el puesto">
+                                    <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeField(${dynamicFieldCount})">Eliminar</button>
+                                </div>`;
+                $('#dynamicFields').append(newField);
+            });
+
+            // Eliminar un campo dinámico
+            window.removeField = function (id) {
+                $('#field' + id).remove();
+            };
+
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Áreas</title>
+</head>
+<body>
+    <h1>Agregar Área</h1>
+    
+    <form id="formulario-area">
+        <label for="nombre-area">Nombre del área:</label>
+        <input type="text" id="nombre-area" name="nombre-area" required><br><br>
+
+        <label for="palabras-clave">Palabras clave (separadas por coma):</label>
+        <input type="text" id="palabras-clave" name="palabras-clave" required><br><br>
+
+        <button type="submit">Guardar área</button>
+    </form>
+
+    <div id="mensaje-error" style="color: red; display: none;">Por favor, complete todos los campos.</div>
+    <div id="mensaje-exito" style="color: green; display: none;">Área guardada correctamente.</div>
+
+    <button id="ver-areas">Ver áreas guardadas</button>
+
+    <div id="areas-list" style="margin-top: 20px; border-top: 1px solid #ccc;"></div>
+
+    <script>
+        const formulario = document.getElementById('formulario-area');
+        formulario.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const nombreArea = document.getElementById('nombre-area').value;
+            const palabrasClave = document.getElementById('palabras-clave').value;
+
+            // Verificamos los valores antes de enviar
+            console.log("Nombre del área:", nombreArea);  // Verificamos lo que se captura
+            console.log("Palabras clave:", palabrasClave);  // Verificamos lo que se captura
+
+            if (!nombreArea || !palabrasClave) {
+                document.getElementById('mensaje-error').style.display = 'block';
+                document.getElementById('mensaje-exito').style.display = 'none';
+            } else {
+                // Enviar datos al backend para guardar en areas.json
+                fetch('http://127.0.0.1:5000/guardar_area', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nombre_area: nombreArea,
+                        palabras_clave: palabrasClave
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        document.getElementById('mensaje-exito').style.display = 'block';
+                        document.getElementById('mensaje-error').style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('mensaje-error').style.display = 'block';
+                    document.getElementById('mensaje-exito').style.display = 'none';
+                });
+            }
+        });
+
+        // Mostrar las áreas guardadas
+        document.getElementById('ver-areas').addEventListener('click', function() {
+            fetch('http://127.0.0.1:5000/ver_areas', {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const areasListDiv = document.getElementById('areas-list');
+                areasListDiv.innerHTML = '<h3>Áreas Guardadas:</h3>';
+
+                if (data.areas.length === 0) {
+                    areasListDiv.innerHTML += '<p>No hay áreas guardadas.</p>';
+                } else {
+                    data.areas.forEach((area, index) => {
+                        areasListDiv.innerHTML += `
+                            <p><strong>Área ${index + 1}:</strong> ${area.nombre_area}</p>
+                            <p><em>Palabras clave:</em> ${area.palabras_clave.join(', ')}</p>
+                            <hr>
+                        `;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar las áreas guardadas:', error);
+            });
+        });
+    </script>
+</body>
+</html>

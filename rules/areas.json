@@ -1,0 +1,15 @@
+{
+    "areas": [
+        {
+            "nombre_area": "Sistemas",
+            "palabras_clave": ["ingeniería de sistemas,", "soporte técnico","informática","redes"]
+        },
+        {
+            "nombre_area": "Administración de Empresas",
+            "palabras_clave": [
+                "Administración",
+                " administracion"
+            ]
+        }
+    ]
+}
