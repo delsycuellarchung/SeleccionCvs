@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Plantillas de Cargo</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="/static/js/icons.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <style>
+    /* Keep app look & feel consistent */
+    :root{--bg:#f5f7fa;--card:#fff;--muted:#6c7a89;--accent:#1f4e79;--border:#e6e9ee}
+    body{font-family:'Inter',system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:var(--bg);color:#20323a;margin:0;padding:22px}
+    .container{max-width:1100px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .topbar h2{margin:0;font-size:1.25rem;color:#162730;font-weight:700}
+    .badge-area{background:#eef6fb;color:#174a6f;padding:6px 8px;border-radius:6px;margin-right:6px;font-size:0.82rem}
+  </style>
+</head>
+<body>
+  <!-- sidebar minimal copy to keep navigation visible -->
+  {% include '_sidebar.html' %}
+
+  <div id="content" class="container">
+    <div class="topbar">
+      <h2>Plantillas de Cargo</h2>
+      <div>
+        <button id="newBtn" class="btn btn-primary">Nueva Plantilla</button>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover" id="plantillasTable">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Área</th>
+                <th>Creado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="plantillasList"></tbody>
+          </table>
+        </div>
+        <div id="emptyState" style="display:none;text-align:center;color:var(--muted);">No hay plantillas.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal wizard for create/edit -->
+  <div class="modal fade" id="wizardModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="wizardTitle">Nueva plantilla</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <div class="nav nav-tabs" id="wizardTabs" role="tablist">
+            <a class="nav-item nav-link active" data-toggle="tab" href="#step1">1. General</a>
+            <a class="nav-item nav-link" data-toggle="tab" href="#step2">2. Formación</a>
+            <a class="nav-item nav-link" data-toggle="tab" href="#step3">3. Experiencia</a>
+            <a class="nav-item nav-link" data-toggle="tab" href="#step4">4. Habilidades</a>
+            <a class="nav-item nav-link" data-toggle="tab" href="#step5">5. Certificaciones</a>
+          </div>
+          <div class="tab-content mt-3">
+            <div class="tab-pane fade show active" id="step1">
+              <div class="form-group"><label>Nombre del puesto *</label><input id="g_nombre" class="form-control"></div>
+              <div class="form-group"><label>Área *</label><input id="g_area" class="form-control"></div>
+              <div class="form-group"><label>Descripción breve</label><textarea id="g_descripcion" class="form-control" rows="3"></textarea></div>
+              <div class="text-right"><button class="btn btn-sm btn-outline-secondary prevBtn" style="display:none">Anterior</button><button class="btn btn-sm btn-primary saveSection" data-section="general">Guardar sección</button></div>
+            </div>
+            <div class="tab-pane fade" id="step2">
+              <div class="form-group"><label>Nivel académico esperado</label><input id="f_nivel" class="form-control"></div>
+              <div class="form-group"><label>Carreras relacionadas</label>
+                <div id="f_carreras_list"></div>
+                <div class="input-group mt-2"><input id="f_carrera_input" class="form-control"><div class="input-group-append"><button id="f_add_carrera" class="btn btn-outline-secondary">Agregar</button></div></div>
+              </div>
+              <div class="text-right"><button class="btn btn-sm btn-outline-secondary prevBtn">Anterior</button><button class="btn btn-sm btn-primary saveSection" data-section="formacion">Guardar sección</button></div>
+            </div>
+            <div class="tab-pane fade" id="step3">
+              <div class="form-group"><label>Años mínimos</label><input id="e_anios" type="number" min="0" class="form-control"></div>
+              <div class="form-group"><label>Descripción de experiencia</label><textarea id="e_descripcion" class="form-control" rows="3"></textarea></div>
+              <div class="text-right"><button class="btn btn-sm btn-outline-secondary prevBtn">Anterior</button><button class="btn btn-sm btn-primary saveSection" data-section="experiencia">Guardar sección</button></div>
+            </div>
+            <div class="tab-pane fade" id="step4">
+              <div class="form-group"><label>Habilidades técnicas</label><div id="h_tecnicas_list"></div>
+                <div class="input-group mt-2"><input id="h_tecnica_input" class="form-control"><div class="input-group-append"><button id="h_add_tecnica" class="btn btn-outline-secondary">Agregar</button></div></div>
+              </div>
+              <div class="form-group"><label>Habilidades blandas</label><div id="h_blandas_list"></div>
+                <div class="input-group mt-2"><input id="h_blanda_input" class="form-control"><div class="input-group-append"><button id="h_add_blanda" class="btn btn-outline-secondary">Agregar</button></div></div>
+              </div>
+              <div class="text-right"><button class="btn btn-sm btn-outline-secondary prevBtn">Anterior</button><button class="btn btn-sm btn-primary saveSection" data-section="habilidades">Guardar sección</button></div>
+            </div>
+            <div class="tab-pane fade" id="step5">
+              <div class="form-group"><label>Certificaciones</label><div id="c_list"></div>
+                <div class="input-group mt-2"><input id="c_input" class="form-control"><div class="input-group-append"><button id="c_add" class="btn btn-outline-secondary">Agregar</button></div></div>
+              </div>
+              <div class="text-right"><button class="btn btn-sm btn-outline-secondary prevBtn">Anterior</button><button class="btn btn-sm btn-primary saveSection" data-section="certificaciones">Guardar sección</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          <button id="deleteBtn" type="button" class="btn btn-outline-danger" style="display:none">Eliminar plantilla</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  $(function(){
+    var currentId = null;
+
+    function loadList(){
+      $.get('/api/plantillas', function(data){
+        var list = data || [];
+        var tbody = $('#plantillasList'); tbody.empty();
+        if(list.length===0){ $('#emptyState').show(); } else { $('#emptyState').hide(); }
+        list.forEach(function(p){
+          var tr = $('<tr>');
+          tr.append($('<td>').text(p.nombre || '---'));
+          tr.append($('<td>').text(p.area || '---'));
+          tr.append($('<td>').text(p.created_at ? p.created_at : '-'));
+          var actions = $('<td>');
+          var btnView = $('<button class="btn btn-sm btn-outline-primary mr-1">Ver</button>').click(function(){ openWizard(p.id, true); });
+          var btnEdit = $('<button class="btn btn-sm btn-outline-secondary mr-1">Editar</button>').click(function(){ openWizard(p.id, false); });
+          var btnDel = $('<button class="btn btn-sm btn-outline-danger">Eliminar</button>').click(function(){ if(confirm('Confirmar eliminación de plantilla "'+(p.nombre||'')+'"?')){ $.ajax({url:'/api/plantillas/'+p.id, method:'DELETE', success:function(){ loadList(); }, error:function(){ alert('Error eliminando'); }}); }});
+          actions.append(btnView).append(btnEdit).append(btnDel);
+          tr.append(actions);
+          tbody.append(tr);
+        });
+      }).fail(function(){ alert('Error cargando plantillas'); });
+    }
+
+    function openWizard(id, viewOnly){
+      currentId = id || null;
+      $('#wizardTitle').text(id ? (viewOnly? 'Ver plantilla' : 'Editar plantilla') : 'Nueva plantilla');
+      // reset fields
+      $('#g_nombre').val(''); $('#g_area').val(''); $('#g_descripcion').val('');
+      $('#f_nivel').val(''); $('#f_carreras_list').empty();
+      $('#e_anios').val(''); $('#e_descripcion').val('');
+      $('#h_tecnicas_list').empty(); $('#h_blandas_list').empty();
+      $('#c_list').empty();
+      $('#deleteBtn').toggle(!!id && !viewOnly);
+      // load if id
+      if(id){
+        $.get('/api/plantillas', function(data){
+          var item = (data||[]).find(function(x){ return x.id===id; }) || {};
+          $('#g_nombre').val(item.nombre||''); $('#g_area').val(item.area||''); $('#g_descripcion').val(item.descripcion||'');
+          if(item.formacion){ $('#f_nivel').val(item.formacion.nivel||''); (item.formacion.carreras||[]).forEach(addCarrera);
+          }
+          if(item.experiencia){ $('#e_anios').val(item.experiencia.anios||''); $('#e_descripcion').val(item.experiencia.descripcion||''); }
+          (item.habilidades && item.habilidades.tecnicas || []).forEach(addTecnica);
+          (item.habilidades && item.habilidades.blandas || []).forEach(addBlanda);
+          (item.certificaciones||[]).forEach(addCertificacion);
+        }).fail(function(){ alert('Error cargando plantilla'); });
+      }
+
+      // make inputs readonly if viewOnly
+      $('#wizardModal input, #wizardModal textarea, #wizardModal button').prop('disabled', viewOnly);
+      $('#wizardModal .saveSection').prop('disabled', viewOnly);
+      $('#wizardModal').modal('show');
+    }
+
+    // helpers to manage list items
+    function addCarrera(txt){ if(!txt) return; var el = $('<div class="badge badge-light mr-1 mb-1">'+txt+' <a href="#" class="remove" style="margin-left:6px;color:#d00">×</a></div>'); el.find('.remove').click(function(e){ e.preventDefault(); el.remove(); }); $('#f_carreras_list').append(el); }
+    function addTecnica(txt){ if(!txt) return; var el = $('<div class="badge badge-light mr-1 mb-1">'+txt+' <a href="#" class="remove" style="margin-left:6px;color:#d00">×</a></div>'); el.find('.remove').click(function(e){ e.preventDefault(); el.remove(); }); $('#h_tecnicas_list').append(el); }
+    function addBlanda(txt){ if(!txt) return; var el = $('<div class="badge badge-light mr-1 mb-1">'+txt+' <a href="#" class="remove" style="margin-left:6px;color:#d00">×</a></div>'); el.find('.remove').click(function(e){ e.preventDefault(); el.remove(); }); $('#h_blandas_list').append(el); }
+    function addCertificacion(txt){ if(!txt) return; var el = $('<div class="badge badge-light mr-1 mb-1">'+txt+' <a href="#" class="remove" style="margin-left:6px;color:#d00">×</a></div>'); el.find('.remove').click(function(e){ e.preventDefault(); el.remove(); }); $('#c_list').append(el); }
+
+    // add handlers for add buttons
+    $('#f_add_carrera').on('click', function(){ var v = $('#f_carrera_input').val().trim(); if(v){ addCarrera(v); $('#f_carrera_input').val(''); }});
+    $('#h_add_tecnica').on('click', function(){ var v = $('#h_tecnica_input').val().trim(); if(v){ addTecnica(v); $('#h_tecnica_input').val(''); }});
+    $('#h_add_blanda').on('click', function(){ var v = $('#h_blanda_input').val().trim(); if(v){ addBlanda(v); $('#h_blanda_input').val(''); }});
+    $('#c_add').on('click', function(){ var v = $('#c_input').val().trim(); if(v){ addCertificacion(v); $('#c_input').val(''); }});
+
+    // save section
+    $('.saveSection').on('click', function(){
+      var section = $(this).data('section');
+      var payload = {};
+      if(currentId) payload.id = currentId;
+      if(section==='general'){
+        var nombre = $('#g_nombre').val().trim(); var area = $('#g_area').val().trim(); var desc = $('#g_descripcion').val().trim();
+        if(!nombre || !area){ alert('Nombre y Área son obligatorios'); return; }
+        payload.nombre = nombre; payload.area = area; payload.descripcion = desc;
+      } else if(section==='formacion'){
+        var nivel = $('#f_nivel').val().trim(); var carreras = [];
+        $('#f_carreras_list .badge').each(function(){ carreras.push($(this).text().slice(0,-2)); });
+        payload.formacion = { nivel: nivel, carreras: carreras };
+      } else if(section==='experiencia'){
+        var anios = parseInt($('#e_anios').val()||0); var descE = $('#e_descripcion').val().trim(); payload.experiencia = { anios: anios, descripcion: descE };
+      } else if(section==='habilidades'){
+        var tecnicas = []; $('#h_tecnicas_list .badge').each(function(){ tecnicas.push($(this).text().slice(0,-2)); });
+        var blandas = []; $('#h_blandas_list .badge').each(function(){ blandas.push($(this).text().slice(0,-2)); });
+        payload.habilidades = { tecnicas: tecnicas, blandas: blandas };
+      } else if(section==='certificaciones'){
+        var certs = []; $('#c_list .badge').each(function(){ certs.push($(this).text().slice(0,-2)); }); payload.certificaciones = certs;
+      }
+      // send to server
+      $.ajax({ url: '/api/plantillas', method: 'POST', contentType: 'application/json', data: JSON.stringify(payload), success: function(resp){ if(resp && resp.ok){ currentId = resp.id; alert('Sección guardada'); loadList(); } else { alert('Error guardando'); } }, error:function(){ alert('Error guardando'); } });
+    });
+
+    // new
+    $('#newBtn').on('click', function(){ currentId = null; openWizard(null,false); });
+
+    // delete
+    $('#deleteBtn').on('click', function(){ if(!currentId) return; if(!confirm('Confirmar eliminación?')) return; $.ajax({ url: '/api/plantillas/'+currentId, method:'DELETE', success:function(){ $('#wizardModal').modal('hide'); loadList(); }, error:function(){ alert('Error eliminando'); } }); });
+
+    // view prev buttons
+    $('.prevBtn').on('click', function(){ var active = $('#wizardTabs .nav-link.active'); var prev = active.parent().find('.nav-link').index(active) -1; active.removeClass('active'); active.parent().find('.nav-link').eq(prev).click(); });
+
+    loadList();
+  });
+  </script>
+    <script>
+    (function(){
+      document.querySelectorAll('#sidebar a .icon').forEach(function(span){
+        var iconPath = span.getAttribute('data-icon') || span.dataset.icon; if(!iconPath) return; try{ var img = document.createElement('img'); img.src=iconPath; img.alt=''; img.loading='lazy'; span.innerHTML=''; span.appendChild(img);}catch(e){console.warn('No se pudo cargar icono:', iconPath)}
+      });
+    })();
+    </script>
+</body>
+</html>

@@ -7,40 +7,20 @@
     <title>Panel de Administración de RRHH</title>
     <!-- Bootstrap 4 CDN -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
     <!-- Fuente corporativa -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <style>
-        :root {
-            --bg: #f5f7fa;
-            --card: #ffffff;
-            --muted: #6c7a89;
-            --accent: #1f4e79; /* tono sobrio azul marino */
-            --accent-weak: #2b5876;
-            --border: #e6e9ee;
-            --radius: 8px;
+    {% include '_sidebar.html' %}
+            font-size:16px;line-height:1;width:34px;height:34px;border-radius:6px;position:absolute;right:8px;top:50%;transform:translateY(-50%);box-shadow:0 1px 2px rgba(20,30,40,0.04);z-index:3
         }
-
-        html,
-        body {
-            height: 100%;
-        }
-
-        body {
-            background-color: var(--bg);
-            font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-            color: #27343b;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            margin: 0;
-        }
+        .field-delete-btn svg{width:16px;height:16px;display:block}
+        .field-delete-btn:hover{color:#a00;background:#fff}
 
         .container {
             margin-top: 36px;
             margin-bottom: 36px;
             max-width: 1100px;
+            padding-left: 28px;
+            padding-right: 28px;
         }
 
         .navbar {
@@ -85,6 +65,10 @@
             padding: 18px 24px;
         }
 
+        .table-responsive{background:transparent;padding:8px;border-radius:8px}
+
+        .actions .btn{min-width:86px}
+
         .btn-primary {
             background-color: var(--accent);
             border-color: var(--accent);
@@ -116,37 +100,104 @@
             border-top: none;
         }
 
-        /* Estilo para el menú lateral */
+        #formArea .form-group {
+            margin-bottom: 1.15rem;
+        }
+
+        #formArea label {
+            font-weight: 600;
+            color: #37474f;
+        }
+
+        input.form-control {
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            box-shadow: none;
+        }
+
+        .alert {
+            margin-top: 15px;
+            display: none;
+            border-radius: 6px;
+        }
+
+        /* Estilo para el menú lateral mejorado */
         #sidebar {
             position: fixed;
             top: 0;
             bottom: 0;
             left: 0;
-            width: 250px;
-            background-color: var(--accent);
-            padding-top: 20px;
+            width: 220px;
+            background: linear-gradient(180deg, #18324a 0%, var(--accent) 100%);
+            padding: 18px 12px;
             color: white;
+            display:flex;
+            flex-direction:column;
+            align-items:stretch;
+            gap:12px;
+            box-shadow: 2px 0 12px rgba(20,30,40,0.08);
+        }
+
+        #sidebar .brand{
+            display:flex;align-items:center;gap:12px;padding:6px 10px;margin-bottom:6px
+        }
+
+        #sidebar .brand .logo{
+            width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:0.95rem
+        }
+
+        /* Título del menú: debe resaltar más */
+        #sidebar .brand .title{
+            font-size:1.18rem;
+            font-weight:800;
+            color:#fff;
+            letter-spacing:0.6px;
+            text-transform:uppercase;
         }
 
         #sidebar a {
             color: white;
-            font-weight: 600;
-            padding: 10px 15px;
-            display: block;
+            font-weight:600;
+            padding: 10px 14px;
+            display: flex;
+            align-items:center;
+            gap:10px;
             text-decoration: none;
+            border-left: 4px solid transparent;
+            border-radius:6px;
         }
+
+        #sidebar a .icon{width:18px;height:18px;opacity:0.95;display:inline-block;flex-shrink:0}
+        #sidebar a .label{display:inline-block}
+        #sidebar a .icon img{width:18px;height:18px;object-fit:cover;border-radius:4px;display:inline-block}
 
         #sidebar a:hover {
-            background-color: var(--accent-weak);
+            background-color: rgba(255,255,255,0.04);
+            border-left-color: rgba(255,255,255,0.12);
         }
 
-        #sidebar .nav-item {
-            margin-bottom: 10px;
+        #sidebar a.sidebar-active{
+            background-color: rgba(255,255,255,0.06);
+            border-left-color: rgba(255,255,255,0.18);
         }
+
+        #sidebar .nav-item {margin-bottom:6px}
+
+        /* botón para colapsar sidebar en pantallas pequeñas */
+        #sidebarToggle{display:none;background:transparent;border:none;color:rgba(255,255,255,0.9)}
 
         /* Sección de contenido principal */
         #content {
-            margin-left: 250px;
+            margin-left: 240px;
+            padding-top: 18px;
+        }
+
+        @media(max-width:900px){
+            #sidebar{position:fixed;transform:translateX(-100%);transition:transform .25s ease;z-index:1040}
+            #sidebar.open{transform:translateX(0)}
+            #sidebarToggle{display:inline-block}
+            #content{margin-left:0;padding-top:12px}
         }
 
         .form-group {
@@ -170,28 +221,79 @@
 
     <!-- Barra de navegación -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+        <button id="sidebarToggle" class="navbar-toggler" type="button" aria-label="Toggle sidebar">
+            ☰
         </button>
     </nav>
 
     <!-- Menú lateral -->
     <div id="sidebar">
-        <h4 class="text-center text-white">Menú de Administración</h4>
+        <div class="brand">
+            <div class="logo">
+                <!-- briefcase SVG icon -->
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 7a2 2 0 0 1 2-2h3V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1h3a2 2 0 0 1 2 2v3H3V7z" fill="rgba(255,255,255,0.95)"/>
+                  <path d="M21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5h18z" fill="rgba(255,255,255,0.85)"/>
+                </svg>
+            </div>
+            <div class="title">Panel RRHH</div>
+        </div>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a href="#formPuesto" id="linkDatosPuesto">Puestos</a>
+                <a href="/" id="linkPanel"><span class="icon" data-icon="/img/recursoshumanos.png"></span><span class="label">Panel</span></a>
+            </li>
+            <li class="nav-item">
+                <a href="/plantillas" id="linkPlantillas"><span class="icon" data-icon="/img/plantilla.png"></span><span class="label">Plantillas</span></a>
+            </li>
+            <li class="nav-item">
+                <a href="/seleccion" id="linkSeleccion"><span class="icon" data-icon="/img/seleccionporpuesto.png"></span><span class="label">Selección por Puesto</span></a>
+            </li>
+            <li class="nav-item">
+                <a href="/historial" id="linkHistorial"><span class="icon" data-icon="/img/historial.png"></span><span class="label">Historial</span></a>
+            </li>
+            <li class="nav-item">
+                <a href="/entrevistas" id="linkEntrevistas"><span class="icon" data-icon="/img/entrevista.png"></span><span class="label">Entrevistas</span></a>
+            </li>
+            <li class="nav-item">
+                <a href="/puestos" id="linkPuestosCards"><span class="icon" data-icon="/img/puestodisponible.png"></span><span class="label">Puestos Disponibles</span></a>
+            </li>
+            <li class="nav-item">
+                <a href="/candidatos" id="linkCandidatos"><span class="icon" data-icon="/img/candidato.png"></span><span class="label">Candidatos</span></a>
+            </li>
+            <li class="nav-item">
+                <a href="/base_talentos" id="linkBaseTalentos"><span class="icon" data-icon="/img/recursoshumanos.png"></span><span class="label">Base de Talentos</span></a>
             </li>
         </ul>
     </div>
 
     <div id="content" class="container">
 
-        <h1 class="text-center mb-4">Panel de Administración de RRHH</h1>
+        <h1 class="mb-4">Panel de Administración de RRHH</h1>
 
         <!-- Mensaje de éxito/error al agregar área -->
         <div id="messageArea" class="alert alert-success" role="alert"></div>
+
+        <!-- Sección para ver los puestos -->
+        <div class="card">
+            <div class="card-header">
+                <h4>Puestos Disponibles</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="puestosTable">
+                    <thead>
+                        <tr>
+                            <th>Nombre del Puesto</th>
+                            <th>Área</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="puestosList">
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </div>
 
         <!-- Sección para agregar nuevo puesto disponible -->
         <div class="card mt-4" id="formPuesto">
@@ -200,108 +302,328 @@
             </div>
             <div class="card-body">
                 <form id="formDatosPuesto">
-                    <div class="form-group">
-                        <label for="nombre_puesto">Nombre del Puesto:</label>
-                        <input type="text" class="form-control" id="nombre_puesto" placeholder="Ejemplo: Ingeniero de Sistemas" required>
+                    <!-- Sección 1: Nombre del Puesto -->
+                    <div id="section1" class="form-section">
+                        <div class="form-group">
+                            <label for="nombre_puesto">Nombre del Puesto:</label>
+                            <input type="text" class="form-control" id="nombre_puesto" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="area_puesto">Área del Puesto:</label>
+                            <input type="text" class="form-control" id="area_puesto" required>
+                        </div>
+                        <div class="d-flex" style="gap:8px">
+                            <button type="button" class="btn btn-secondary" id="nextRequisitos">Siguiente: Requisitos</button>
+                            <button type="button" class="btn btn-outline-secondary" id="cancelSection1">Cancelar</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="area_puesto">Área del Puesto:</label>
-                        <input type="text" class="form-control" id="area_puesto" placeholder="Ejemplo: Sistemas, Tecnología" required>
-                    </div>
-                    <button type="button" class="btn btn-secondary" id="nextRequisitos">Siguiente: Requisitos</button>
-                </form>
-            </div>
-        </div>
 
-        <!-- Sección de Requisitos -->
-        <div class="card mt-4" id="requisitos" style="display: none;">
-            <div class="card-header">
-                <h4>Requisitos del Puesto</h4>
-            </div>
-            <div class="card-body">
-                <form id="formRequisitos">
-                    <div class="form-group">
-                        <label for="formacion_academica">Formación Académica Requerida:</label>
-                        <input type="text" class="form-control" id="formacion_academica" placeholder="Ejemplo: Ingeniería de Sistemas, Licenciatura" required>
+                    <!-- Sección 2: Requisitos -->
+                    <div id="section2" class="form-section" style="display: none;">
+                        <div class="form-group">
+                            <label for="formacion_academica">Formación Académica:</label>
+                            <input type="text" class="form-control" id="formacion_academica" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="experiencia_laboral">Experiencia Laboral:</label>
+                            <input type="text" class="form-control" id="experiencia_laboral" required>
+                        </div>
+                        <div class="d-flex" style="gap:8px">
+                            <button type="button" class="btn btn-secondary" id="nextHabilidades">Siguiente: Habilidades</button>
+                            <button type="button" class="btn btn-outline-secondary" id="cancelSection2">Volver</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="experiencia_laboral">Experiencia Laboral Requerida:</label>
-                        <input type="text" class="form-control" id="experiencia_laboral" placeholder="Ejemplo: 3 años en soporte técnico" required>
-                    </div>
-                    <button type="button" class="btn btn-secondary" id="nextHabilidades">Siguiente: Habilidades</button>
-                </form>
-            </div>
-        </div>
 
-        <!-- Sección de Habilidades y Certificaciones -->
-        <div class="card mt-4" id="habilidades" style="display: none;">
-            <div class="card-header">
-                <h4>Habilidades y Certificaciones</h4>
-            </div>
-            <div class="card-body">
-                <form id="formHabilidades">
-                    <div class="form-group">
-                        <label for="habilidades">Habilidades Requeridas:</label>
-                        <input type="text" class="form-control" id="habilidades" placeholder="Ejemplo: Python, SQL, Redes" required>
+                    <!-- Sección 3: Habilidades -->
+                    <div id="section3" class="form-section" style="display: none;">
+                        <div class="form-group">
+                            <label for="habilidades">Habilidades:</label>
+                            <input type="text" class="form-control" id="habilidades" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="certificaciones">Certificaciones:</label>
+                            <input type="text" class="form-control" id="certificaciones" required>
+                        </div>
+                        <div class="form-group" id="customFieldsWrapper">
+                            <label>Campos personalizados</label>
+                            <small class="form-text text-muted">Ej: Salario — 1500</small>
+                            <div id="customFieldsContainer"></div>
+                            <div id="noCustomFields" style="color:var(--muted);margin-top:6px;display:none">Sin campos personalizados.</div>
+                            <div style="margin-top:8px;">
+                                <button type="button" id="addCustomFieldBtn" class="btn btn-sm btn-outline-secondary">Agregar campo</button>
+                            </div>
+                        </div>
+                        <div class="d-flex" style="gap:8px">
+                            <button type="submit" class="btn btn-primary">Guardar Puesto</button>
+                            <button type="button" class="btn btn-outline-secondary" id="cancelSection3">Cancelar</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="certificaciones">Certificaciones Requeridas:</label>
-                        <input type="text" class="form-control" id="certificaciones" placeholder="Ejemplo: Certificación Cisco, AWS" required>
-                    </div>
-                    <button type="button" class="btn btn-secondary" id="nextCamposAdicionales">Siguiente: Campos Adicionales</button>
                 </form>
-            </div>
-        </div>
-
-        <!-- Sección de Campos Adicionales -->
-        <div class="card mt-4" id="campos_adicionales" style="display: none;">
-            <div class="card-header">
-                <h4>Campos Adicionales</h4>
-            </div>
-            <div class="card-body">
-                <button type="button" class="btn btn-secondary" id="addField">Agregar Campo Adicional</button>
-                <div id="dynamicFields"></div> <!-- Aquí aparecerán los campos dinámicos -->
-                <button type="submit" class="btn btn-primary btn-block mt-4">Guardar puesto</button>
             </div>
         </div>
 
     </div>
 
     <script>
+        // Sidebar toggle y estado activo
+        $(function(){
+            function setActiveLink(){
+                var path = window.location.pathname;
+                $('#sidebar a').removeClass('sidebar-active');
+                $('#sidebar a').each(function(){
+                    var href = $(this).attr('href');
+                    if(href === path || (href !== '/' && path.indexOf(href) === 0)){
+                        $(this).addClass('sidebar-active');
+                    }
+                });
+            }
+
+            $('#sidebarToggle').on('click', function(){
+                $('#sidebar').toggleClass('open');
+            });
+
+            // Cerrar sidebar al clicar fuera (móvil)
+            $(document).on('click', function(e){
+                if(window.innerWidth <= 900){
+                    if(!$(e.target).closest('#sidebar, #sidebarToggle').length){
+                        $('#sidebar').removeClass('open');
+                    }
+                }
+            });
+
+            setActiveLink();
+        });
         $(document).ready(function () {
-            // Mostrar siguiente sección cuando se haga clic en los botones
+            var editOriginalName = null;
+            var removedFields = [];
+
+            function loadPuestos(){
+                $.get('/ver_puestos', function (puestos) {
+                    var tbody = $('#puestosList');
+                    tbody.empty();
+                    for (var puesto of puestos) {
+                        var row = $(`<tr>
+                                       <td class="td-nombre"></td>
+                                       <td class="td-area"></td>
+                                       <td class="td-actions"></td>
+                                   </tr>`);
+                        row.find('.td-nombre').text(puesto.nombre_puesto);
+                        row.find('.td-area').text(puesto.area_puesto);
+                        var btnEdit = $('<button>').addClass('btn btn-info btn-sm mr-2').text('Editar');
+                        var btnDel = $('<button>').addClass('btn btn-danger btn-sm').text('Eliminar');
+                        // attach handlers
+                        (function(p){
+                            btnEdit.on('click', function(){ iniciarEdicion(p); });
+                            btnDel.on('click', function(){ eliminarPuestoConfirm(p); });
+                        })(puesto.nombre_puesto);
+
+                        row.find('.td-actions').append(btnEdit).append(btnDel);
+                        tbody.append(row);
+                    }
+                }).fail(function(){
+                    $('#messageArea').removeClass('alert-success').addClass('alert-danger').text('Error cargando puestos').show();
+                });
+            }
+
+            function iniciarEdicion(nombre){
+                // Cargar el puesto a editar para rellenar el formulario
+                $.get('/ver_puestos', function(puestos){
+                    var encontrado = puestos.find(function(p){ return p.nombre_puesto === nombre; });
+                    if(!encontrado){ alert('Puesto no encontrado'); return; }
+                    $('#nombre_puesto').val(encontrado.nombre_puesto);
+                    $('#area_puesto').val(encontrado.area_puesto);
+                    $('#formacion_academica').val(encontrado.formacion_academica || '');
+                    $('#experiencia_laboral').val(encontrado.experiencia_laboral || '');
+                    $('#habilidades').val(encontrado.habilidades || '');
+                    $('#certificaciones').val(encontrado.certificaciones || '');
+                    // cargar campos extra si existen
+                    renderCustomFields(encontrado.campos_extra || []);
+                    // set edit mode
+                    editOriginalName = encontrado.nombre_puesto;
+                    removedFields = [];
+                    $('#formPuesto .btn-primary').text('Actualizar Puesto');
+                    // show the first section (nombre/area) and hide the others so fields are visible for editing
+                    $('#section1').show();
+                    $('#section2').hide();
+                    $('#section3').hide();
+                    addDeleteIconsForEdit();
+                    // scroll to form
+                    $('html, body').animate({scrollTop: $('#formPuesto').offset().top - 20}, 300);
+                });
+            }
+
+            function addDeleteIconsForEdit(){
+                // fields where deletion is allowed (excluding nombre_puesto)
+                var fields = ['area_puesto','formacion_academica','experiencia_laboral','habilidades','certificaciones'];
+                fields.forEach(function(f){
+                    var el = $('#' + f);
+                    if(el.length && !el.data('hasDelete')){
+                        // wrap input in a positioned wrapper so the button aligns to the input
+                        if(!el.parent().hasClass('input-with-btn')){
+                            el.wrap('<div class="input-with-btn"></div>');
+                        }
+                        var wrapper = el.parent();
+                        var btn = $(`<button type='button' class='field-delete-btn' title='Eliminar campo'>
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M9 3v1H4v2h16V4h-5V3H9zm1 5v9h2V8h-2zM7 8v9h2V8H7zm8 0v9h2V8h-2z"/></svg>
+                        </button>`);
+
+                        
+                        btn.on('click', function(){
+                            // remove the whole form-group and mark as removed
+                            wrapper.closest('.form-group').remove();
+                            removedFields.push(f);
+                        });
+                        wrapper.append(btn);
+                        el.data('hasDelete', true);
+                    }
+                });
+            }
+
+            function eliminarPuestoConfirm(nombre){
+                if(!confirm('Confirmar eliminación del puesto "' + nombre + '"?')) return;
+                $.ajax({
+                    url: '/eliminar_puesto',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({nombre_puesto: nombre}),
+                    success: function(){
+                        $('#messageArea').removeClass('alert-danger').addClass('alert-success').text('Puesto eliminado').show();
+                        loadPuestos();
+                    },
+                    error: function(){ $('#messageArea').removeClass('alert-success').addClass('alert-danger').text('Error al eliminar el puesto').show(); }
+                });
+            }
+
+            // Enviar el formulario para agregar o actualizar un puesto
+            $('#formDatosPuesto').submit(function (event) {
+                event.preventDefault();
+
+                var nombre_puesto = $('#nombre_puesto').val();
+                var area_puesto = $('#area_puesto').val();
+                var formacion_academica = $('#formacion_academica').val();
+                var experiencia_laboral = $('#experiencia_laboral').val();
+                var habilidades = $('#habilidades').val();
+                var certificaciones = $('#certificaciones').val();
+
+                var data = {};
+                // Always send nombre (used as identifier) — if editing, it may be unchanged
+                data.nombre_puesto = nombre_puesto;
+                // Conditionally include other fields only if not removed
+                if(removedFields.indexOf('area_puesto') === -1) data.area_puesto = area_puesto;
+                if(removedFields.indexOf('formacion_academica') === -1) data.formacion_academica = formacion_academica;
+                if(removedFields.indexOf('experiencia_laboral') === -1) data.experiencia_laboral = experiencia_laboral;
+                if(removedFields.indexOf('habilidades') === -1) data.habilidades = habilidades;
+                if(removedFields.indexOf('certificaciones') === -1) data.certificaciones = certificaciones;
+                // custom fields always collected from DOM
+                data.campos_extra = collectCustomFields();
+
+                if(editOriginalName){
+                    // update existing
+                    $.ajax({
+                        url: '/editar_puesto',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(data),
+                        success: function (response) {
+                            $('#messageArea').removeClass('alert-danger').addClass('alert-success').text('Puesto actualizado correctamente').show();
+                            // reset
+                            editOriginalName = null;
+                            $('#formPuesto .btn-primary').text('Guardar Puesto');
+                            $('#formDatosPuesto')[0].reset();
+                            loadPuestos();
+                        },
+                        error: function (response) {
+                            $('#messageArea').removeClass('alert-success').addClass('alert-danger').text('Error al actualizar el puesto').show();
+                        }
+                    });
+                } else {
+                    // create new
+                    $.ajax({
+                        url: '/agregar_puesto',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(data),
+                        success: function (response) {
+                            $('#messageArea').removeClass('alert-danger').addClass('alert-success').text('Puesto agregado correctamente').show();
+                            $('#formDatosPuesto')[0].reset();
+                            loadPuestos();
+                        },
+                        error: function (response) {
+                            $('#messageArea').removeClass('alert-success').addClass('alert-danger').text('Error al agregar el puesto').show();
+                        }
+                    });
+                }
+            });
+
+            // Lógica para cambiar de sección en el formulario
             $('#nextRequisitos').click(function () {
-                $('#formPuesto').hide();
-                $('#requisitos').show();
+                $('#section1').hide();
+                $('#section2').show();
             });
 
             $('#nextHabilidades').click(function () {
-                $('#requisitos').hide();
-                $('#habilidades').show();
+                $('#section2').hide();
+                $('#section3').show();
             });
 
-            $('#nextCamposAdicionales').click(function () {
-                $('#habilidades').hide();
-                $('#campos_adicionales').show();
+            // Cancel / navigation buttons
+            $('#cancelSection1').on('click', function(){
+                $('#formDatosPuesto')[0].reset();
+                editOriginalName = null;
+                $('#formPuesto .btn-primary').text('Guardar Puesto');
             });
 
-            // Agregar un nuevo campo dinámico
-            var dynamicFieldCount = 0;
-            $('#addField').click(function () {
-                dynamicFieldCount++;
-                var newField = `<div class="form-group" id="field${dynamicFieldCount}">
-                                    <label for="dynamic_field_${dynamicFieldCount}">Campo Adicional ${dynamicFieldCount}:</label>
-                                    <input type="text" class="form-control" id="dynamic_field_${dynamicFieldCount}" placeholder="Ejemplo: Información adicional para el puesto">
-                                    <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeField(${dynamicFieldCount})">Eliminar</button>
-                                </div>`;
-                $('#dynamicFields').append(newField);
+            $('#cancelSection2').on('click', function(){
+                $('#section2').hide();
+                $('#section1').show();
             });
 
-            // Eliminar un campo dinámico
-            window.removeField = function (id) {
-                $('#field' + id).remove();
-            };
+            $('#cancelSection3').on('click', function(){
+                $('#formDatosPuesto')[0].reset();
+                $('#section3').hide();
+                $('#section1').show();
+                editOriginalName = null;
+                $('#formPuesto .btn-primary').text('Guardar Puesto');
+                renderCustomFields([]);
+                // remove any delete icons and reset removedFields
+                removedFields = [];
+                // if inputs were removed, reload form structure by clearing and re-rendering (safer to reload page data)
+                // simple approach: re-render by reloading puestos to refresh UI state
+                loadPuestos();
+            });
 
+            // inicializar
+            loadPuestos();
+            // --- campos dinámicos: lógica de UI ---
+            function addCustomField(label, value){
+                var idx = Date.now();
+                var row = $(`<div class="d-flex mb-2" data-idx="${idx}"></div>`);
+                var inpLabel = $(`<input type="text" class="form-control" placeholder="Nombre (ej. Salario)" style="max-width:35%;margin-right:8px;">`).val(label||'');
+                var inpValue = $(`<input type="text" class="form-control" placeholder="Valor (ej. 1500)" style="flex:1;margin-right:8px;">`).val(value||'');
+                var btnDel = $(`<button type="button" class="btn btn-sm btn-outline-danger">Eliminar</button>`);
+                btnDel.on('click', function(){ row.remove(); });
+                row.append(inpLabel).append(inpValue).append(btnDel);
+                $('#customFieldsContainer').append(row);
+            }
+
+            function renderCustomFields(list){
+                $('#customFieldsContainer').empty();
+                (list||[]).forEach(function(f){ addCustomField(f.label, f.value); });
+                // show/hide placeholder
+                if((list||[]).length === 0) $('#noCustomFields').show(); else $('#noCustomFields').hide();
+            }
+
+            function collectCustomFields(){
+                var arr = [];
+                $('#customFieldsContainer > div').each(function(){
+                    var lbl = $(this).find('input').eq(0).val()||'';
+                    var val = $(this).find('input').eq(1).val()||'';
+                    if(lbl.trim() !== '' ) arr.push({label: lbl, value: val});
+                });
+                return arr;
+            }
+
+            $('#addCustomFieldBtn').on('click', function(){ addCustomField('',''); });
         });
     </script>
 

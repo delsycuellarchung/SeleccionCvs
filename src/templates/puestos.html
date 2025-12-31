@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puestos - Tarjetas</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="/static/js/icons.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        :root{
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --muted: #6c7a89;
+            --accent: #1f4e79;
+            --border: #e6e9ee;
+            --radius: 8px;
+        }
+
+        body{
+            background: var(--bg);
+            font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+            color:#23313a;
+            -webkit-font-smoothing:antialiased;
+            margin:0;
+            padding:20px 0;
+        }
+
+        .container{max-width:1100px}
+
+        .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+        .topbar h2{margin:0;font-size:1.25rem;color:#162730;font-weight:700}
+
+        .card-puesto{
+            border-radius:10px;
+            background:var(--card);
+            box-shadow:0 8px 20px rgba(15,30,40,0.06);
+            padding:18px;
+            margin-bottom:16px;
+        }
+
+        .card-puesto h5{color:var(--accent);font-weight:600;margin-bottom:6px}
+        .meta{color:var(--muted);font-size:0.9rem;margin-bottom:8px}
+        .badge-field{background:#f1f5f8;color:#344b57;padding:6px 8px;border-radius:6px;margin-right:6px;font-size:0.85rem}
+
+        .actions .btn{margin-right:8px}
+
+        @media(min-width:900px){
+            .grid{display:grid;grid-template-columns:repeat(2,1fr);grid-gap:18px}
+        }
+
+        /* container width alignment */
+        .container{max-width:1100px}
+
+        .controls .form-control{height:42px}
+        .card-puesto .detalle-line{color:#2f3e46;font-size:0.95rem;margin-bottom:6px}
+        .truncate{display:block;max-height:3.6em;overflow:hidden;line-height:1.2em}
+
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar (kept minimal and consistent) -->
+    {% raw %}
+    <style>
+        #sidebar{position:fixed;top:0;bottom:0;left:0;width:220px;background:linear-gradient(180deg,#18324a 0%,#1f4e79 100%);padding:18px 12px;color:#fff;display:flex;flex-direction:column;gap:12px;box-shadow:2px 0 12px rgba(20,30,40,0.08);}
+        #sidebar .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+        #sidebar .logo{width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
+        #sidebar a{color:white;font-weight:600;padding:10px 14px;display:flex;align-items:center;gap:10px;text-decoration:none;border-left:4px solid transparent;border-radius:6px}
+        #sidebar a.sidebar-active{background:rgba(255,255,255,0.06);border-left-color:rgba(255,255,255,0.18)}
+        #content{margin-left:240px;padding-top:18px}
+        @media(max-width:900px){#sidebar{display:none}#content{margin-left:0}}
+        #sidebar a .icon img{width:18px;height:18px;object-fit:cover;border-radius:4px;display:inline-block}
+    </style>
+    {% endraw %}
+    {% include '_sidebar.html' %}
+    <div id="content" class="container">
+        <div class="topbar">
+            <h2>Puestos Disponibles</h2>
+        </div>
+
+                <div class="row mb-3">
+                        <div class="col-md-6">
+                                <input id="searchInput" class="form-control" placeholder="Buscar por nombre, habilidades o experiencia...">
+                        </div>
+                        <div class="col-md-4">
+                                <select id="areaFilter" class="form-control">
+                                        <option value="">Filtrar por área (todas)</option>
+                                </select>
+                        </div>
+                        <div class="col-md-2 text-right">
+                                <button id="refreshBtn" class="btn btn-outline-secondary">Actualizar</button>
+                        </div>
+                </div>
+
+                <div id="puestosGrid" class="grid">
+                        <!-- Las tarjetas se inyectarán aquí -->
+                </div>
+
+                <div id="emptyState" style="display:none;text-align:center;margin-top:30px;color:var(--muted);">
+                        No hay puestos disponibles.
+                </div>
+
+                <!-- Modal de edición -->
+                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editModalLabel">Editar Puesto</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editForm">
+                                    <div class="form-group">
+                                        <label>Nombre del puesto</label>
+                                        <input type="text" id="edit_nombre_puesto" class="form-control" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Área</label>
+                                        <input type="text" id="edit_area_puesto" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Formación académica</label>
+                                        <input type="text" id="edit_formacion_academica" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Experiencia laboral</label>
+                                        <input type="text" id="edit_experiencia_laboral" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Habilidades</label>
+                                        <input type="text" id="edit_habilidades" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Certificaciones</label>
+                                        <input type="text" id="edit_certificaciones" class="form-control">
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                <button type="button" id="saveEditBtn" class="btn btn-primary">Guardar cambios</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </div>
+
+    <script>
+        $(function(){
+            function renderPuestos(puestos){
+                var grid = $('#puestosGrid');
+                grid.empty();
+
+                if(!puestos || puestos.length === 0){
+                    $('#emptyState').show();
+                    return;
+                }
+
+                $('#emptyState').hide();
+
+                puestos.forEach(function(puesto){
+                    var card = $('<div>').addClass('card-puesto');
+
+                    var header = $('<div>').append($('<h5>').text(puesto.nombre_puesto));
+                    header.append($('<div>').addClass('meta').text(puesto.area_puesto));
+
+                    var detalles = $('<div>').css('margin','8px 0');
+                    detalles.append($('<div>').addClass('detalle-line').html('<strong>Formación:</strong> <span class="truncate">' + (puesto.formacion_academica || '-') + '</span>'));
+                    detalles.append($('<div>').addClass('detalle-line').html('<strong>Experiencia:</strong> <span class="truncate">' + (puesto.experiencia_laboral || '-') + '</span>'));
+                    detalles.append($('<div>').addClass('detalle-line').html('<strong>Habilidades:</strong> <span class="truncate">' + (puesto.habilidades || '-') + '</span>'));
+                    detalles.append($('<div>').addClass('detalle-line').html('<strong>Certificaciones:</strong> <span class="truncate">' + (puesto.certificaciones || '-') + '</span>'));
+
+                    var actions = $('<div>').addClass('actions').css('margin-top','12px');
+                    var btnEliminar = $('<button>').addClass('btn btn-sm btn-outline-danger').text('Eliminar');
+                    btnEliminar.click(function(){
+                        if(!confirm('Confirmar eliminación del puesto "' + puesto.nombre_puesto + '"?')) return;
+                        $.ajax({
+                            url: '/eliminar_puesto',
+                            method: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify({nombre_puesto: puesto.nombre_puesto}),
+                            success: function(){
+                                card.fadeOut(200, function(){ $(this).remove(); if($('#puestosGrid').children().length===0) $('#emptyState').show(); });
+                            },
+                            error: function(){ alert('Error al eliminar el puesto'); }
+                        });
+                    });
+
+                    var btnEditar = $('<button>').addClass('btn btn-sm btn-outline-primary').text('Editar');
+                    btnEditar.click(function(){
+                        // abrir modal y rellenar campos (nombre readonly)
+                        $('#edit_nombre_puesto').val(puesto.nombre_puesto);
+                        $('#edit_area_puesto').val(puesto.area_puesto || '');
+                        $('#edit_formacion_academica').val(puesto.formacion_academica || '');
+                        $('#edit_experiencia_laboral').val(puesto.experiencia_laboral || '');
+                        $('#edit_habilidades').val(puesto.habilidades || '');
+                        $('#edit_certificaciones').val(puesto.certificaciones || '');
+                        // guardar referencia al puesto actual en el botón
+                        $('#saveEditBtn').data('puestoNombre', puesto.nombre_puesto);
+                        $('#editModal').modal('show');
+                    });
+
+                    actions.append(btnEditar).append(btnEliminar);
+
+                    card.append(header).append(detalles).append(actions);
+                    grid.append(card);
+                });
+            }
+
+            var allPuestos = [];
+
+            function populateAreaFilter(puestos){
+                var areas = {};
+                puestos.forEach(function(p){ if(p.area_puesto) areas[p.area_puesto]=true; });
+                var select = $('#areaFilter');
+                select.find('option:not(:first)').remove();
+                Object.keys(areas).sort().forEach(function(a){ select.append($('<option>').val(a).text(a)); });
+            }
+
+            function applyFiltersAndRender(){
+                var q = ($('#searchInput').val() || '').toLowerCase().trim();
+                var area = $('#areaFilter').val();
+                var filtered = allPuestos.filter(function(p){
+                    var hayQ = q === '' || (p.nombre_puesto||'').toLowerCase().includes(q) || (p.habilidades||'').toLowerCase().includes(q) || (p.experiencia_laboral||'').toLowerCase().includes(q);
+                    var hayArea = !area || (p.area_puesto === area);
+                    return hayQ && hayArea;
+                });
+                renderPuestos(filtered);
+            }
+
+            function loadPuestos(){
+                $.get('/ver_puestos', function(data){
+                    allPuestos = data || [];
+                    populateAreaFilter(allPuestos);
+                    applyFiltersAndRender();
+                }).fail(function(){
+                    $('#emptyState').text('Error al cargar puestos').show();
+                });
+            }
+
+            // Handlers
+            $('#searchInput').on('input', function(){ applyFiltersAndRender(); });
+            $('#areaFilter').on('change', function(){ applyFiltersAndRender(); });
+            $('#refreshBtn').on('click', function(){ loadPuestos(); });
+
+            // Guardar cambios desde modal
+            $('#saveEditBtn').on('click', function(){
+                var nombre = $('#edit_nombre_puesto').val();
+                var payload = {
+                    nombre_puesto: nombre,
+                    area_puesto: $('#edit_area_puesto').val() || '',
+                    formacion_academica: $('#edit_formacion_academica').val() || '',
+                    experiencia_laboral: $('#edit_experiencia_laboral').val() || '',
+                    habilidades: $('#edit_habilidades').val() || '',
+                    certificaciones: $('#edit_certificaciones').val() || ''
+                };
+                $.ajax({
+                    url: '/editar_puesto',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(){
+                        $('#editModal').modal('hide');
+                        loadPuestos();
+                    },
+                    error: function(){ alert('Error al guardar cambios'); }
+                });
+            });
+
+            loadPuestos();
+        });
+    </script>
+    <script>
+        // Marca el enlace activo del sidebar según la ruta
+        $(function(){
+            var path = window.location.pathname;
+            $('#sidebar a').removeClass('sidebar-active');
+            $('#sidebar a').each(function(){
+                var href = $(this).attr('href');
+                if(href === path || (href !== '/' && path.indexOf(href) === 0)){
+                    $(this).addClass('sidebar-active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

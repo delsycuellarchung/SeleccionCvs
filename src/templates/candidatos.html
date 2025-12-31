@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Candidatos</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="/static/js/icons.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        :root{--bg:#f5f7fa;--card:#fff;--muted:#6c7a89;--accent:#1f4e79;--border:#e6e9ee}
+        body{font-family:'Inter',system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:var(--bg);color:#20323a;margin:0;padding:22px}
+        .container{max-width:1100px}
+        .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+        .topbar h2{margin:0;font-size:1.25rem;color:#162730;font-weight:700}
+        .controls .form-control{height:42px}
+        .grid{display:grid;grid-template-columns:repeat(1,1fr);grid-gap:14px}
+        @media(min-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+        .card-candidato{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 8px 20px rgba(15,30,40,0.06)}
+        .card-candidato h5{margin:0 0 8px;color:var(--accent);font-weight:700}
+        .meta{color:var(--muted);font-size:0.9rem;margin-bottom:8px}
+        .badge-area{background:#eef6fb;color:#174a6f;padding:6px 8px;border-radius:6px;margin-right:6px;font-size:0.82rem}
+        .actions .btn{margin-right:8px}
+    </style>
+</head>
+<body>
+    <!-- Sidebar (keeps navigation visible) -->
+    {% raw %}
+    <style>
+        #sidebar{position:fixed;top:0;bottom:0;left:0;width:220px;background:linear-gradient(180deg,#18324a 0%,#1f4e79 100%);padding:18px 12px;color:#fff;display:flex;flex-direction:column;gap:12px;box-shadow:2px 0 12px rgba(20,30,40,0.08);}
+        #sidebar .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+        #sidebar .logo{width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
+            #sidebar a{color:white;font-weight:600;padding:10px 14px;display:flex;align-items:center;gap:10px;text-decoration:none;border-left:4px solid transparent;border-radius:6px}
+            #sidebar a.sidebar-active{background:rgba(255,255,255,0.06);border-left-color:rgba(255,255,255,0.18)}
+        #content{margin-left:240px;padding-top:18px}
+        @media(max-width:900px){#sidebar{display:none}#content{margin-left:0}}
+        #sidebar a .icon img{width:18px;height:18px;object-fit:cover;border-radius:4px;display:inline-block}
+    </style>
+    {% endraw %}
+    {% include '_sidebar.html' %}
+    <div id="content" class="container">
+        <div class="topbar">
+            <h2>Candidatos</h2>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <input id="searchInput" class="form-control" placeholder="Buscar candidato por nombre de archivo...">
+            </div>
+            <div class="col-md-4">
+                <select id="areaFilter" class="form-control mb-2">
+                    <option value="">Filtrar por área (todas)</option>
+                </select>
+                <select id="stateFilter" class="form-control" title="Filtrar por estado">
+                    <option value="">Filtrar por estado (todos)</option>
+                    <option value="No evaluado">No evaluado</option>
+                    <option value="Preseleccionado">Preseleccionado</option>
+                    <option value="Descartado">Descartado</option>
+                </select>
+            </div>
+            <div class="col-md-2 text-right">
+                <div class="btn-group" role="group" aria-label="acciones">
+                    <button id="refreshBtn" class="btn btn-outline-secondary">Actualizar</button>
+                    <button id="prepareBtn" class="btn btn-outline-primary" title="Marcar candidatos seleccionados para preparar">Preparar selección</button>
+                    <div class="btn-group" role="group">
+                        <button id="exportJsonBtn" class="btn btn-outline-success" title="Exportar selección a JSON">Exportar JSON</button>
+                        <button id="exportCsvBtn" class="btn btn-outline-success" title="Exportar selección a CSV">Exportar CSV</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="candidatosTable">
+                        <thead>
+                                    <tr>
+                                        <th style="width:40px"></th>
+                                        <th>Candidato</th>
+                                        <th>Área(s)</th>
+                                        <th>Puntaje</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                        </thead>
+                        <tbody id="candidatosList"></tbody>
+                    </table>
+                </div>
+                        <div id="paginator" class="mt-2" style="display:flex;justify-content:center;align-items:center"></div>
+                <div id="emptyState" style="display:none;text-align:center;margin-top:10px;color:var(--muted);">No hay candidatos.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal detalle -->
+    <div class="modal fade" id="detalleModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Detalles del candidato</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+          </div>
+                                <div class="modal-body">
+                        <p><strong>Archivo:</strong> <span id="modalArchivo"></span></p>
+                        <p><strong>Áreas clasificadas:</strong></p>
+                        <div id="modalAreas"></div>
+                        <p class="mt-2"><strong>Puntaje:</strong> <span id="modalPuntaje"></span></p>
+                        <p class="mt-2"><strong>Texto extraído (resumen):</strong></p>
+                        <div id="modalTexto" style="max-height:240px;overflow:auto;background:#f8f9fb;padding:8px;border-radius:6px;color:#20323a"></div>
+                    </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <button type="button" id="copyNameBtn" class="btn btn-outline-primary">Copiar nombre</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    // SheetJS for Excel export
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+    $(function(){
+        var all = {};
+        var selected = {};
+        var pageSize = 10;
+        var currentPage = 1;
+        var sortDir = -1; // -1 desc, 1 asc
+        function populateAreaFilter(data){
+            var set = {};
+            Object.keys(data).forEach(function(file){
+                var raw = data[file];
+                var areas = [];
+                if(Array.isArray(raw)) areas = raw;
+                else if(raw && Array.isArray(raw.areas)) areas = raw.areas;
+                areas.forEach(function(a){ set[a]=true; });
+            });
+            var sel = $('#areaFilter'); sel.find('option:not(:first)').remove(); Object.keys(set).sort().forEach(function(a){sel.append($('<option>').val(a).text(a))});
+        }
+
+        function render(filtered){
+            var tbody = $('#candidatosList'); tbody.empty();
+            var keys = Object.keys(filtered||{});
+            if(keys.length===0){$('#emptyState').show(); $('#paginator').empty(); return;} $('#emptyState').hide();
+
+            // apply sorting by score (number of areas)
+            keys.sort(function(a,b){
+                var sa = (filtered[a] && typeof filtered[a].score === 'number') ? filtered[a].score : (filtered[a] && filtered[a].areas ? filtered[a].areas.length : 0);
+                var sb = (filtered[b] && typeof filtered[b].score === 'number') ? filtered[b].score : (filtered[b] && filtered[b].areas ? filtered[b].areas.length : 0);
+                return (sa - sb) * sortDir || a.localeCompare(b);
+            });
+
+            // pagination
+            var total = keys.length;
+            var totalPages = Math.max(1, Math.ceil(total / pageSize));
+            currentPage = Math.min(currentPage, totalPages);
+            var start = (currentPage - 1) * pageSize;
+            var pageKeys = keys.slice(start, start + pageSize);
+
+            pageKeys.forEach(function(file){
+                var data = filtered[file] || {};
+                var areas = data.areas || [];
+                var puntaje = (typeof data.score === 'number') ? data.score : areas.length; // use backend score if provided
+                var tr = $('<tr>');
+                var tdSel = $('<td>').append(
+                    $('<input type="checkbox" class="select-cv">').prop('checked', !!selected[file]).data('file', file)
+                );
+                var tdFile = $('<td>').text(file);
+                var tdAreas = $('<td>');
+                if(areas.length){
+                    areas.forEach(function(a){ tdAreas.append($('<span>').addClass('badge-area').text(a).css({'margin-right':'6px'})); });
+                } else {
+                    tdAreas.text('Sin áreas clasificadas');
+                }
+                var tdScore = $('<td>').text(puntaje);
+                // Estado column with dropdown
+                var states = ['No evaluado','Preseleccionado','Descartado'];
+                var currentState = getStateFor(file) || 'No evaluado';
+                var tdState = $('<td>');
+                var sel = $('<select class="form-control form-control-sm state-select">');
+                states.forEach(function(s){ sel.append($('<option>').val(s).text(s)); });
+                sel.val(currentState);
+                sel.on('change', function(){ setStateFor(file, $(this).val()); });
+                tdState.append(sel);
+                var tdActions = $('<td>');
+                var btnVer = $('<button>').addClass('btn btn-sm btn-outline-primary mr-2').text('Ver');
+                btnVer.on('click', function(){
+                    $('#modalArchivo').text(file);
+                    var container = $('#modalAreas').empty();
+                    if(areas.length===0) container.text('No hay áreas asignadas');
+                    else areas.forEach(function(a){container.append($('<div>').addClass('badge-area').css('margin-bottom','6px').text(a));});
+                    // puntaje
+                    $('#modalPuntaje').text(puntaje);
+                    // texto/resumen if available in all[file]
+                    var raw = all[file];
+                    var texto = '';
+                    if(raw){
+                        if(typeof raw === 'object'){
+                            texto = raw.summary || raw.text || raw.extracted_text || '';
+                        }
+                    }
+                    if(!texto) texto = 'No hay texto extraído disponible.';
+                    $('#modalTexto').text(texto);
+                    $('#detalleModal').modal('show');
+                });
+                var btnPreview = $('<button>').addClass('btn btn-sm btn-outline-info mr-2').text('Previsualizar');
+                btnPreview.on('click', function(){ $('#previewFrame').attr('src', '/download_cv/' + encodeURIComponent(file)); $('#previewModal').modal('show'); });
+                var btnDownload = $('<a>').addClass('btn btn-sm btn-outline-success mr-2').attr('role','button').text('Descargar');
+                btnDownload.attr('href', '/download_cv/' + encodeURIComponent(file));
+                btnDownload.attr('target','_blank');
+                var btnCopy = $('<button>').addClass('btn btn-sm btn-outline-secondary').text('Copiar nombre');
+                btnCopy.on('click', function(){ navigator.clipboard.writeText(file).then(function(){ alert('Nombre copiado'); }); });
+                tdActions.append(btnVer).append(btnPreview).append(btnDownload).append(btnCopy);
+                tr.append(tdSel).append(tdFile).append(tdAreas).append(tdScore).append(tdState).append(tdActions);
+                tbody.append(tr);
+            });
+
+            // build paginator
+            var pager = $('#paginator'); pager.empty();
+            var info = $('<div style="margin-right:12px;color:var(--muted)">').text('Página ' + currentPage + ' / ' + totalPages + ' — ' + total + ' candidatos');
+            pager.append(info);
+            var makeBtn = function(text, disabled, cb){ var b = $('<button class="btn btn-sm btn-outline-secondary ml-1">').text(text); if(disabled) b.prop('disabled',true); b.on('click',cb); return b; };
+            pager.append(makeBtn('« Primero', currentPage===1, function(){ currentPage=1; applyFilters(); }));
+            pager.append(makeBtn('‹ Anterior', currentPage===1, function(){ if(currentPage>1) currentPage--; applyFilters(); }));
+            pager.append(makeBtn('Siguiente ›', currentPage===totalPages, function(){ if(currentPage<totalPages) currentPage++; applyFilters(); }));
+            pager.append(makeBtn('Último »', currentPage===totalPages, function(){ currentPage=totalPages; applyFilters(); }));
+        }
+
+        function load(){
+            $.get('/ver_cvs', function(data){
+                if(data && data.error){ $('#emptyState').text('Error: ' + data.error).show(); return; }
+                all = data || {};
+                // reset selection only if previously empty
+                Object.keys(all).forEach(function(k){ if(!(k in selected)) selected[k]=false; });
+                populateAreaFilter(all);
+                applyFilters();
+            }).fail(function(){ $('#emptyState').text('Error cargando candidatos').show(); });
+        }
+
+        function getFiltered(){
+            var q = ($('#searchInput').val()||'').toLowerCase().trim();
+            var area = $('#areaFilter').val();
+            var filtered = {};
+            Object.keys(all).forEach(function(file){
+                var raw = all[file];
+                var areas = [];
+                var score = null;
+                // backend may return either an array of areas or an object { areas: [...], score: N }
+                if(Array.isArray(raw)){
+                    areas = raw;
+                } else if(raw && typeof raw === 'object'){
+                    if(Array.isArray(raw.areas)) areas = raw.areas;
+                    if(typeof raw.score === 'number') score = raw.score;
+                }
+                var matchQ = q === '' || file.toLowerCase().includes(q) || areas.join(' ').toLowerCase().includes(q);
+                var matchArea = !area || areas.indexOf(area) !== -1;
+                if(matchQ && matchArea) filtered[file]={areas: areas, score: score};
+            });
+            return filtered;
+        }
+
+        function applyFilters(){
+            var filtered = getFiltered();
+            render(filtered);
+        }
+
+        // State persistence helpers
+        function loadStates(){
+            try{
+                var raw = localStorage.getItem('candidate_states');
+                return raw ? JSON.parse(raw) : {};
+            }catch(e){ return {}; }
+        }
+        function saveStates(map){
+            try{ localStorage.setItem('candidate_states', JSON.stringify(map)); }catch(e){}
+        }
+        var statesMap = loadStates();
+        function getStateFor(file){ return statesMap[file]; }
+        function setStateFor(file, state){ statesMap[file]=state; saveStates(statesMap); }
+
+        $('#searchInput').on('input', function(){ currentPage=1; applyFilters(); });
+        $('#areaFilter').on('change', function(){ currentPage=1; applyFilters(); });
+        $('#stateFilter').on('change', function(){ currentPage=1; applyFilters(); });
+        $('#refreshBtn').on('click', load);
+        $('#copyNameBtn').on('click', function(){ var name = $('#modalArchivo').text(); navigator.clipboard.writeText(name).then(function(){alert('Nombre copiado')}); });
+
+        // header sort by clicking the Puntaje header
+        $('#candidatosTable thead th').filter(function(){ return $(this).text().trim()==='Puntaje'; }).css('cursor','pointer').on('click', function(){ sortDir = -sortDir; applyFilters(); });
+
+        // handle checkbox toggles (use event delegation)
+        $('#candidatosList').on('change', '.select-cv', function(){ var f = $(this).data('file'); selected[f] = $(this).is(':checked'); });
+
+        // prepare selection: save selected filenames to localStorage
+        $('#prepareBtn').on('click', function(){
+            var chosen = Object.keys(selected).filter(function(k){ return selected[k]; });
+            if(chosen.length===0){ alert('No hay candidatos seleccionados'); return; }
+            localStorage.setItem('prepared_candidates', JSON.stringify(chosen));
+            alert('Preparación guardada localmente (' + chosen.length + ' candidatos)');
+        });
+
+        // Export current filtered list to JSON or Excel (per requirements)
+        function getFilteredDataArray(){
+            var filtered = getFiltered();
+            var rows = [];
+            Object.keys(filtered).forEach(function(f){
+                var d = filtered[f] || {};
+                var areas = d.areas || [];
+                var score = (typeof d.score === 'number') ? d.score : areas.length;
+                var state = getStateFor(f) || 'No evaluado';
+                var texto = '';
+                var raw = all[f];
+                if(raw && typeof raw === 'object') texto = raw.summary || raw.text || raw.extracted_text || '';
+                rows.push({ filename: f, areas: areas.join('; '), score: score, state: state, text: texto });
+            });
+            return rows;
+        }
+
+        $('#exportJsonBtn').on('click', function(){
+            var rows = getFilteredDataArray();
+            var blob = new Blob([JSON.stringify(rows, null, 2)], {type:'application/json;charset=utf-8'});
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a'); a.href = url; a.download = 'candidatos_filtrados.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        });
+
+        $('#exportCsvBtn').text('Exportar Excel');
+        $('#exportCsvBtn').off('click').on('click', function(){
+            var rows = getFilteredDataArray();
+            if(rows.length===0){ alert('No hay candidatos en la lista actual'); return; }
+            var ws_data = [];
+            ws_data.push(['Candidato','Área(s)','Puntaje','Estado','Texto extraído']);
+            rows.forEach(function(r){ ws_data.push([r.filename, r.areas, r.score, r.state, r.text]); });
+            var wb = XLSX.utils.book_new();
+            var ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, 'Candidatos');
+            XLSX.writeFile(wb, 'candidatos_filtrados.xlsx');
+        });
+
+        // load initial
+        load();
+    });
+    </script>
+        <script>
+            // Marca el enlace activo del sidebar según la ruta
+            $(function(){
+                var path = window.location.pathname;
+                $('#sidebar a').removeClass('sidebar-active');
+                $('#sidebar a').each(function(){
+                    var href = $(this).attr('href');
+                    if(href === path || (href !== '/' && path.indexOf(href) === 0)){
+                        $(this).addClass('sidebar-active');
+                    }
+                });
+            });
+        </script>
+        <script>
+        (function(){
+            document.querySelectorAll('#sidebar a .icon').forEach(function(span){
+                var iconPath = span.getAttribute('data-icon') || span.dataset.icon;
+                if(!iconPath) return;
+                try{ var img = document.createElement('img'); img.src = iconPath; img.alt = ''; img.loading='lazy'; span.innerHTML=''; span.appendChild(img); }catch(e){console.warn('No se pudo cargar icono:', iconPath)}
+            });
+        })();
+        </script>
+</body>
+</html>

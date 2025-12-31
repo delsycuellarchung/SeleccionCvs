@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Historial de Selecciones</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="/static/js/icons.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root{--bg:#f5f7fa;--card:#fff;--muted:#6c7a89;--accent:#1f4e79;--border:#e6e9ee}
+    body{font-family:'Inter',system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:var(--bg);color:#20323a;margin:0;padding:22px}
+    .container{max-width:1100px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .topbar h2{margin:0;font-size:1.25rem;color:#162730;font-weight:700}
+    table th, table td{vertical-align:middle}
+  </style>
+</head>
+<body>
+  {% raw %}
+  <style>
+    #sidebar{position:fixed;top:0;bottom:0;left:0;width:220px;background:linear-gradient(180deg,#18324a 0%,#1f4e79 100%);padding:18px 12px;color:#fff;display:flex;flex-direction:column;gap:12px;box-shadow:2px 0 12px rgba(20,30,40,0.08);} 
+    #sidebar .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    #sidebar .logo{width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
+    #sidebar a{color:white;font-weight:600;padding:10px 14px;display:flex;align-items:center;gap:10px;text-decoration:none;border-left:4px solid transparent;border-radius:6px}
+    #sidebar a.sidebar-active{background:rgba(255,255,255,0.06);border-left-color:rgba(255,255,255,0.18)}
+    #content{margin-left:240px;padding-top:18px}
+    @media(max-width:900px){#sidebar{display:none}#content{margin-left:0}}
+    #sidebar a .icon img{width:18px;height:18px;object-fit:cover;border-radius:4px;display:inline-block}
+  </style>
+  {% endraw %}
+
+  {% include '_sidebar.html' %}
+
+  <div id="content" class="container">
+    <div class="topbar">
+      <h2>Historial de Selecciones</h2>
+      <div>
+        <button id="exportAllExcel" class="btn btn-sm btn-outline-success">Exportar todo (Excel)</button>
+        <button id="exportAllJson" class="btn btn-sm btn-outline-secondary">Exportar todo (JSON)</button>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="form-row">
+          <div class="col-md-3 mb-2">
+            <select id="filterArea" class="form-control">
+              <option value="">Filtrar por área (todas)</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-2">
+            <select id="filterPuesto" class="form-control">
+              <option value="">Filtrar por puesto (todos)</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-2">
+            <input id="startDate" type="date" class="form-control" placeholder="Desde">
+          </div>
+          <div class="col-md-3 mb-2">
+            <input id="endDate" type="date" class="form-control" placeholder="Hasta">
+          </div>
+        </div>
+        <div class="mt-3 table-responsive">
+          <table class="table table-hover" id="historialTable">
+            <thead>
+              <tr>
+                <th>Puesto</th>
+                <th>Área</th>
+                <th>Candidato</th>
+                <th>Puntaje</th>
+                <th>Fecha cierre</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="historialBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal detalle -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header"><h5 class="modal-title">Detalle de selección</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+          <div class="modal-body">
+            <div id="detailContent"></div>
+          </div>
+          <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button><button id="exportRecordExcel" class="btn btn-outline-success">Exportar (Excel)</button><button id="exportRecordJson" class="btn btn-outline-secondary">Exportar (JSON)</button></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+$(function(){
+  var records = [];
+
+  function loadFilters(){
+    $.get('/api/selecciones', function(data){ records = data || []; populateFilters(records); render(records); });
+  }
+
+  function populateFilters(list){
+    var areas = {};
+    var puestos = {};
+    list.forEach(function(r){ if(r.area) areas[r.area]=true; if(r.puesto) puestos[r.puesto]=true; });
+    var aSel = $('#filterArea'); aSel.find('option:not(:first)').remove(); Object.keys(areas).sort().forEach(function(a){ aSel.append($('<option>').val(a).text(a)); });
+    var pSel = $('#filterPuesto'); pSel.find('option:not(:first)').remove(); Object.keys(puestos).sort().forEach(function(p){ pSel.append($('<option>').val(p).text(p)); });
+  }
+
+  function render(list){
+    var body = $('#historialBody'); body.empty();
+    if(!list || list.length===0){ body.append($('<tr>').append($('<td colspan="6" class="text-center text-muted">').text('No hay selecciones registradas.'))); return; }
+    list.forEach(function(r,i){
+      var tr = $('<tr>').data('rec', r);
+      tr.append($('<td>').text(r.puesto));
+      tr.append($('<td>').text(r.area));
+      tr.append($('<td>').text(r.candidato));
+      tr.append($('<td>').text((r.score!==null && r.score!==undefined)? r.score : 'N/A'));
+      tr.append($('<td>').text(r.at || '-'));
+      var actions = $('<td>');
+      var btnDetail = $('<button class="btn btn-sm btn-outline-primary mr-1">Ver</button>').on('click', function(){ showDetail(r); });
+      var btnExport = $('<button class="btn btn-sm btn-outline-secondary">Exportar JSON</button>').on('click', function(){ exportRecordJson(r); });
+      actions.append(btnDetail).append(btnExport);
+      tr.append(actions);
+      body.append(tr);
+    });
+  }
+
+  function applyFilters(){
+    var area = $('#filterArea').val();
+    var puesto = $('#filterPuesto').val();
+    var start = $('#startDate').val();
+    var end = $('#endDate').val();
+    var qs = {};
+    if(area) qs.area = area; if(puesto) qs.puesto = puesto; if(start) qs.start = start; if(end) qs.end = end;
+    // reload from server with filters for more accurate date handling
+    $.get('/api/selecciones', qs, function(data){ render(data || []); });
+  }
+
+  function showDetail(r){
+    var c = $('#detailContent'); c.empty();
+    var html = '<h5>Puesto: '+(r.puesto||'')+'</h5>';
+    html += '<p><strong>Área:</strong> '+(r.area||'')+'</p>';
+    html += '<h6>Candidato seleccionado</h6>';
+    html += '<p><strong>Archivo:</strong> '+(r.candidato||'')+'</p>';
+    html += '<p><strong>Puntaje:</strong> '+((r.score!==null && r.score!==undefined)? r.score : 'N/A')+'</p>';
+    if(r.candidato){ html += '<p><a class="btn btn-sm btn-outline-primary" href="/download_cv/'+encodeURIComponent(r.candidato)+'" target="_blank">Ver/Descargar CV</a></p>'; }
+    html += '<p><strong>Fecha de cierre:</strong> '+(r.at||'-')+'</p>';
+    c.html(html);
+    // attach export buttons
+    $('#exportRecordJson').off('click').on('click', function(){ exportRecordJson(r); });
+    $('#exportRecordExcel').off('click').on('click', function(){ exportRecordExcel(r); });
+    $('#detailModal').modal('show');
+  }
+
+  function exportAllJson(){ var blob = new Blob([JSON.stringify(records, null, 2)], {type:'application/json'}); var url = URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='historial_selecciones.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+  function exportAllExcel(){ var rows=[['Puesto','Área','Candidato','Puntaje','Fecha']]; records.forEach(function(r){ rows.push([r.puesto,r.area,r.candidato,(r.score!==null && r.score!==undefined)? r.score : '', r.at]); }); var wb=XLSX.utils.book_new(); var ws=XLSX.utils.aoa_to_sheet(rows); XLSX.utils.book_append_sheet(wb,ws,'Historial'); XLSX.writeFile(wb,'historial_selecciones.xlsx'); }
+  function exportRecordJson(r){ var blob=new Blob([JSON.stringify(r, null, 2)],{type:'application/json'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='seleccion_'+(r.puesto||'')+'.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+  function exportRecordExcel(r){ var rows=[['Puesto','Área','Candidato','Puntaje','Fecha'],[r.puesto,r.area,r.candidato,(r.score!==null&&r.score!==undefined)?r.score:'',r.at]]; var wb=XLSX.utils.book_new(); var ws=XLSX.utils.aoa_to_sheet(rows); XLSX.utils.book_append_sheet(wb,ws,'Seleccion'); XLSX.writeFile(wb,'seleccion_'+(r.puesto||'')+'.xlsx'); }
+
+  // handlers
+  $('#filterArea, #filterPuesto').on('change', applyFilters);
+  $('#startDate, #endDate').on('change', applyFilters);
+  $('#exportAllJson').on('click', exportAllJson);
+  $('#exportAllExcel').on('click', exportAllExcel);
+
+  loadFilters();
+});
+</script>
+<script>
+  (function(){
+    document.querySelectorAll('#sidebar a .icon').forEach(function(span){
+      var iconPath = span.getAttribute('data-icon') || span.dataset.icon;
+      if(!iconPath) return;
+      try{ var img = document.createElement('img'); img.src = iconPath; img.alt = ''; img.loading='lazy'; span.innerHTML=''; span.appendChild(img); }catch(e){console.warn('No se pudo cargar icono:', iconPath)}
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Selección por Puesto</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="/static/js/icons.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <style>
+    :root{--bg:#f5f7fa;--card:#fff;--muted:#6c7a89;--accent:#1f4e79;--border:#e6e9ee}
+    body{font-family:'Inter',system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:var(--bg);color:#20323a;margin:0;padding:22px}
+    .container{max-width:1100px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .topbar h2{margin:0;font-size:1.25rem;color:#162730;font-weight:700}
+    .badge-area{background:#eef6fb;color:#174a6f;padding:6px 8px;border-radius:6px;margin-right:6px;font-size:0.82rem}
+    table th, table td{vertical-align:middle}
+  </style>
+</head>
+<body>
+  {% raw %}
+  <style>
+    #sidebar{position:fixed;top:0;bottom:0;left:0;width:220px;background:linear-gradient(180deg,#18324a 0%,#1f4e79 100%);padding:18px 12px;color:#fff;display:flex;flex-direction:column;gap:12px;box-shadow:2px 0 12px rgba(20,30,40,0.08);} 
+    #sidebar .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    #sidebar .logo{width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
+    #sidebar a{color:white;font-weight:600;padding:10px 14px;display:flex;align-items:center;gap:10px;text-decoration:none;border-left:4px solid transparent;border-radius:6px}
+    #sidebar a.sidebar-active{background:rgba(255,255,255,0.06);border-left-color:rgba(255,255,255,0.18)}
+    #content{margin-left:240px;padding-top:18px}
+    @media(max-width:900px){#sidebar{display:none}#content{margin-left:0}}
+    #sidebar a .icon img{width:18px;height:18px;object-fit:cover;border-radius:4px;display:inline-block}
+  </style>
+  {% endraw %}
+  {% include '_sidebar.html' %}
+
+  <div id="content" class="container">
+    <div class="topbar">
+      <h2>Selección por Puesto</h2>
+      <div>
+        <small class="text-muted">Elige un puesto abierto para ver candidatos recomendados.</small>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="form-row align-items-center">
+          <div class="col-md-6">
+            <label for="puestoSelect">Puesto disponible (solo abiertos)</label>
+            <select id="puestoSelect" class="form-control">
+              <option value="">-- Selecciona un puesto --</option>
+            </select>
+          </div>
+          <div class="col-md-6 text-right">
+            <div style="margin-top:32px">
+              <button id="refreshPuestos" class="btn btn-outline-secondary">Actualizar puestos</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="rankingSection" style="display:none">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5>Ranking de candidatos</h5>
+          <div class="table-responsive">
+            <table class="table table-hover" id="rankingTable">
+              <thead>
+                <tr>
+                  <th style="width:40px"></th>
+                  <th>Candidato</th>
+                  <th>Puntaje</th>
+                  <th>% Ajuste</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="rankingBody"></tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <button id="markFinalistsBtn" class="btn btn-outline-primary">Marcar como finalista</button>
+              <button id="unmarkFinalistsBtn" class="btn btn-outline-secondary">Desmarcar finalistas</button>
+            </div>
+            <div>
+              <button id="selectFinalBtn" class="btn btn-success">Seleccionar candidato final</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="selectedInfo" style="display:none" class="card">
+        <div class="card-body">
+          <h5>Candidato seleccionado</h5>
+          <div id="selectedDetail"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para confirmar selección final -->
+  <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Confirmar selección final</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+        <div class="modal-body">
+          <p>Selecciona el candidato final entre los finalistas:</p>
+          <div id="finalistsList"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button id="confirmSelectBtn" type="button" class="btn btn-primary">Confirmar y cerrar puesto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+$(function(){
+  var puestos = [];
+  var allCvs = {};
+  var currentPuesto = null;
+  var finalists = {};
+
+  function loadPuestos(){
+    $.get('/api/puestos_abiertos', function(data){
+      puestos = data || [];
+      var sel = $('#puestoSelect'); sel.find('option:not(:first)').remove();
+      puestos.forEach(function(p){ sel.append($('<option>').val(p.nombre_puesto).text(p.nombre_puesto + ' — ' + (p.area_puesto||'Área desconocida'))); });
+    }).fail(function(){ alert('Error cargando puestos'); });
+  }
+
+  function loadAllCvs(cb){
+    $.get('/ver_cvs', function(data){ allCvs = data || {}; if(cb) cb(); }).fail(function(){ alert('Error cargando candidatos'); });
+  }
+
+  function getStateMap(){ try{ return JSON.parse(localStorage.getItem('candidate_states')||'{}'); }catch(e){return{}} }
+
+  function buildRankingFor(puestoNombre){
+    if(!puestoNombre) return;
+    currentPuesto = puestos.find(function(x){ return x.nombre_puesto === puestoNombre; });
+    if(!currentPuesto) return;
+    var area = currentPuesto.area_puesto;
+    var stateMap = getStateMap();
+    // filter candidates whose areas include the puesto area and are not marked 'Descartado'
+    var rows = [];
+    Object.keys(allCvs).forEach(function(f){
+      var raw = allCvs[f];
+      var areas = [];
+      var score = null;
+      if(Array.isArray(raw)) areas = raw;
+      else if(raw && typeof raw==='object'){
+        if(Array.isArray(raw.areas)) areas = raw.areas;
+        if(typeof raw.score==='number') score = raw.score;
+      }
+      var matchesArea = areas.indexOf(area) !== -1;
+      var state = stateMap[f] || 'No evaluado';
+      var discarded = state === 'Descartado';
+      if(matchesArea && !discarded){
+        var computedScore = (typeof score==='number') ? score : areas.length;
+        rows.push({file:f, areas:areas, score:computedScore, state:state});
+      }
+    });
+    // sort desc by score
+    rows.sort(function(a,b){ return b.score - a.score; });
+    renderRanking(rows);
+  }
+
+  function renderRanking(rows){
+    $('#rankingSection').show();
+    var body = $('#rankingBody'); body.empty();
+    if(rows.length===0){ body.append($('<tr>').append($('<td colspan="5" class="text-center text-muted">').text('No hay candidatos recomendados para este puesto.'))); return; }
+    var max = rows[0].score || 1;
+    rows.forEach(function(r){
+      var tr = $('<tr>');
+      var cb = $('<input type="checkbox" class="finalist-cb">').data('file', r.file).prop('checked', !!finalists[r.file]);
+      tr.append($('<td>').append(cb));
+      tr.append($('<td>').text(r.file));
+      tr.append($('<td>').text(r.score));
+      var pct = Math.round((r.score / max) * 100);
+      tr.append($('<td>').text(pct + '%'));
+      var actions = $('<td>');
+      var btnView = $('<a class="btn btn-sm btn-outline-primary mr-1" target="_blank">Ver CV</a>').attr('href','/download_cv/'+encodeURIComponent(r.file));
+      var btnToggle = $('<button class="btn btn-sm btn-outline-success">Marcar/Desmarcar finalista</button>');
+      btnToggle.on('click', function(){ toggleFinalist(r.file); cb.prop('checked', !!finalists[r.file]); });
+      actions.append(btnView).append(btnToggle);
+      tr.append(actions);
+      body.append(tr);
+    });
+  }
+
+  function toggleFinalist(file){ if(finalists[file]) delete finalists[file]; else finalists[file]=true; }
+
+  $('#puestoSelect').on('change', function(){ var val = $(this).val(); if(!val){ $('#rankingSection').hide(); currentPuesto=null; return; } loadAllCvs(function(){ buildRankingFor(val); }); });
+  $('#refreshPuestos').on('click', loadPuestos);
+
+  $('#markFinalistsBtn').on('click', function(){ $('.finalist-cb:checked').each(function(){ finalists[$(this).data('file')] = true; }); alert('Finalistas marcados: ' + Object.keys(finalists).length); });
+  $('#unmarkFinalistsBtn').on('click', function(){ $('.finalist-cb:checked').each(function(){ delete finalists[$(this).data('file')]; $(this).prop('checked', false); }); alert('Finalistas desmarcados'); });
+
+  $('#selectFinalBtn').on('click', function(){ var keys = Object.keys(finalists); if(keys.length===0){ alert('No hay finalistas seleccionados'); return; } var list = $('#finalistsList'); list.empty(); keys.forEach(function(f,i){ var radio = $('<div class="form-check">').append($('<input class="form-check-input" type="radio" name="finalRadio">').val(f).prop('checked', i===0)).append($('<label class="form-check-label">').text(f)); list.append(radio); }); $('#confirmModal').modal('show'); });
+
+  $('#confirmSelectBtn').on('click', function(){ var chosen = $('#finalistsList input[name=finalRadio]:checked').val(); if(!chosen){ alert('Selecciona un candidato'); return; } if(!currentPuesto){ alert('No hay puesto seleccionado'); return; }
+    $.ajax({ url:'/api/seleccionar_final', method:'POST', contentType:'application/json', data: JSON.stringify({ puesto_nombre: currentPuesto.nombre_puesto, candidato: chosen }), success:function(resp){ alert('Selección confirmada'); $('#confirmModal').modal('hide'); // show selected info
+        $('#selectedInfo').show(); $('#selectedDetail').html('<p><strong>Archivo:</strong> '+chosen+'</p><p><a class="btn btn-sm btn-outline-primary" target="_blank" href="/download_cv/'+encodeURIComponent(chosen)+'">Ver CV</a></p>');
+        // hide ranking and disable select
+        $('#rankingSection').hide(); $('#puestoSelect option[value="'+currentPuesto.nombre_puesto+'"]').remove(); currentPuesto=null; finalists = {}; }, error:function(){ alert('Error confirmando selección'); } });
+  });
+
+  // initial load
+  loadPuestos();
+});
+</script>
+
+<script>
+  (function(){
+    document.querySelectorAll('#sidebar a .icon').forEach(function(span){
+      var iconPath = span.getAttribute('data-icon') || span.dataset.icon;
+      if(!iconPath) return;
+      try{ var img = document.createElement('img'); img.src = iconPath; img.alt = ''; img.loading='lazy'; span.innerHTML=''; span.appendChild(img); }catch(e){console.warn('No se pudo cargar icono:', iconPath)}
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!-- Shared sidebar include -->
+<style>
+  #sidebar{position:fixed;top:0;bottom:0;left:0;width:220px;background:linear-gradient(180deg,#18324a 0%,#1f4e79 100%);padding:18px 12px;color:#fff;display:flex;flex-direction:column;gap:12px;box-shadow:2px 0 12px rgba(20,30,40,0.08);} 
+  #sidebar .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  #sidebar .logo{width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
+  #sidebar a{color:white;font-weight:600;padding:10px 14px;display:flex;align-items:center;gap:10px;text-decoration:none;border-left:4px solid transparent;border-radius:6px}
+  #sidebar a.sidebar-active{background:rgba(255,255,255,0.06);border-left-color:rgba(255,255,255,0.18)}
+  #content{margin-left:240px;padding-top:18px}
+  @media(max-width:900px){#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#content{margin-left:0;padding-top:12px}}
+  #sidebar a .icon img{width:18px;height:18px;object-fit:cover;border-radius:4px;display:inline-block}
+</style>
+
+<div id="sidebar">
+  <div class="brand"><div class="logo">RR</div><div class="title">Panel RRHH</div></div>
+  <ul class="nav flex-column" style="padding-left:0;margin:0;list-style:none">
+    <li class="nav-item"><a href="/" id="linkPanel"><span class="icon" data-icon="/img/recursoshumanos.png"></span><span class="label">Panel</span></a></li>
+    <li class="nav-item"><a href="/plantillas" id="linkPlantillas"><span class="icon" data-icon="/img/plantilla.png"></span><span class="label">Plantillas</span></a></li>
+    <li class="nav-item"><a href="/seleccion" id="linkSeleccion"><span class="icon" data-icon="/img/seleccionporpuesto.png"></span><span class="label">Selección por Puesto</span></a></li>
+    <li class="nav-item"><a href="/historial" id="linkHistorial"><span class="icon" data-icon="/img/historial.png"></span><span class="label">Historial</span></a></li>
+    <li class="nav-item"><a href="/entrevistas" id="linkEntrevistas"><span class="icon" data-icon="/img/entrevista.png"></span><span class="label">Entrevistas</span></a></li>
+    <li class="nav-item"><a href="/puestos" id="linkPuestosCards"><span class="icon" data-icon="/img/puestodisponible.png"></span><span class="label">Puestos Disponibles</span></a></li>
+    <li class="nav-item"><a href="/candidatos" id="linkCandidatos"><span class="icon" data-icon="/img/candidato.png"></span><span class="label">Candidatos</span></a></li>
+    <li class="nav-item"><a href="/base_talentos" id="linkBaseTalentos"><span class="icon" data-icon="/img/recursoshumanos.png"></span><span class="label">Base de Talentos</span></a></li>
+  </ul>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    // set active sidebar link based on current path
+    try{
+      var path = window.location.pathname;
+      document.querySelectorAll('#sidebar a').forEach(function(a){ a.classList.remove('sidebar-active'); var href=a.getAttribute('href'); if(href===path || (href !== '/' && path.indexOf(href)===0)) a.classList.add('sidebar-active'); });
+    }catch(e){console.warn('sidebar init error', e)}
+  });
+</script>
